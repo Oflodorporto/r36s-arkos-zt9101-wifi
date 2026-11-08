@@ -47,7 +47,7 @@ USB. O nome na carcaça não identifica sozinho kernel, painel ou ligação USB.
 | Unidade de teste | Identificação física | Evidência e limites |
 | --- | --- | --- |
 | R36S vertical | Inscrição visível na PCB fotografada pelo proprietário: **`R36S-V12`**, data **`2023-08-18`** | O Wi-Fi foi recuperado nesta unidade. A inscrição identifica a PCB visível na foto; não comprova, sozinha, a revisão de todas as placas internas do console. A configuração de tela usada foi Panel 4. |
-| R36SH / R36S-H horizontal | Modelo identificado; **revisão exata da PCB ainda não confirmada por inscrição legível disponível** | Instalação da R2 e carregamento/descarregamento do módulo conferidos; Wi-Fi após troca dos dongles confirmado pelo proprietário. O modelo da carcaça não deve ser tratado como revisão de PCB. |
+| R36SH / R36S-H horizontal | Inscrição visível na PCB fotografada pelo proprietário: **`HL-R36H-V20`**, data **`2024-05-18`** | Instalação da R2 e carregamento/descarregamento do módulo conferidos; Wi-Fi após troca dos dongles confirmado pelo proprietário. O modelo da carcaça não deve ser tratado como revisão de PCB. |
 
 O console vertical apresentava **Wi-Fi Off**, lista de redes vazia e
 travamentos no aplicativo Wi-Fi/menu. O proprietário relatou que **o mesmo
