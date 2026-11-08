@@ -42,6 +42,36 @@ upstream: os [créditos e licenças](THIRD_PARTY.md) fazem parte da contribuiç�
 `/boot/Image` com hash diferente. Não force um driver MediaTek/Realtek neste ID
 USB. O nome na carcaça não identifica sozinho kernel, painel ou ligação USB.
 
+## Placas testadas e o caso de Wi-Fi Off
+
+| Unidade de teste | Identificação física | Evidência e limites |
+| --- | --- | --- |
+| R36S vertical | Inscrição visível na PCB fotografada pelo proprietário: **`R36S-V12`**, data **`2023-08-18`** | O Wi-Fi foi recuperado nesta unidade. A inscrição identifica a PCB visível na foto; não comprova, sozinha, a revisão de todas as placas internas do console. A configuração de tela usada foi Panel 4. |
+| R36SH / R36S-H horizontal | Modelo identificado; **revisão exata da PCB ainda não confirmada por inscrição legível disponível** | Instalação da R2 e carregamento/descarregamento do módulo conferidos; Wi-Fi após troca dos dongles confirmado pelo proprietário. O modelo da carcaça não deve ser tratado como revisão de PCB. |
+
+O console vertical apresentava **Wi-Fi Off**, lista de redes vazia e
+travamentos no aplicativo Wi-Fi/menu. O proprietário relatou que **o mesmo
+console e dongle Realtek funcionaram com o cartão já configurado do outro
+console**, enquanto o cartão original não conectava. Essa comparação apontou
+para o software/configuração de inicialização no cartão; ela não sustentava
+declarar a unidade definitivamente incapaz de usar Wi-Fi USB. Os testes de
+rede posteriores confirmaram a recuperação no console vertical.
+
+O outro adaptador testado foi o **Realtek RTL8188FTV, USB `0bda:f179`**, com
+driver `rtl8188fu`. **O instalador ZTop R2 deste repositório é destinado ao
+`350b:9101`; ele não instala driver Realtek.** O Realtek está documentado como
+comparação e caminho de recuperação que funcionou, sem afirmar que todo
+adaptador com esse nome ou toda PCB marcada R36S-V12 funcionará com o pacote.
+
+Se um dongle Realtek aparentemente compatível continua mostrando Wi-Fi Off,
+compare **ID USB, Image exato do kernel, módulo correspondente, bloqueios/
+configurações e DTB ativo/modo USB**. Depois separe detecção USB, criação de
+interface, associação à rede e DHCP. Ter o mesmo número de kernel ou o mesmo
+nome na carcaça não basta para comprovar compatibilidade. Uma busca de redes
+vazia, sozinha, não identifica uma placa defeituosa. Estes resultados registram
+as unidades testadas, sem prometer suporte universal ou uma causa única para
+toda falha de Wi-Fi.
+
 ## Instalação
 
 Baixe **[r36s-zt9101-r2-install.tar.gz](r36s-zt9101-r2-install.tar.gz)** deste repositório, extraia e copie a
