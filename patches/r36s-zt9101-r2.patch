@@ -1,0 +1,122 @@
+diff --git a/ZT9101_android_V1.2.1800.20241115/Makefile b/ZT9101_android_V1.2.1800.20241115/Makefile
+index a98f927..92077a6 100644
+--- a/ZT9101_android_V1.2.1800.20241115/Makefile
++++ b/ZT9101_android_V1.2.1800.20241115/Makefile
+@@ -30,7 +30,7 @@
+   PLATDIR = platform
+   CT                       ?= n
+   CONFIG_DEBUG_LEVEL        = 0
+-  CONFIG_DRIVER_VER         = V1.2.xxx.xxxxxxxx
++  CONFIG_DRIVER_VER         = R36S-R2
+   CONFIG_MODULE_IMPORT_NS   = n
+   CONFIG_FW_FILE            = y
+   CONFIG_STA_AND_AP_MODE    = n
+diff --git a/ZT9101_android_V1.2.1800.20241115/os/linux/cfg80211/zt_cfg80211.c b/ZT9101_android_V1.2.1800.20241115/os/linux/cfg80211/zt_cfg80211.c
+index a7e29da..0f65950 100644
+--- a/ZT9101_android_V1.2.1800.20241115/os/linux/cfg80211/zt_cfg80211.c
++++ b/ZT9101_android_V1.2.1800.20241115/os/linux/cfg80211/zt_cfg80211.c
+@@ -4223,15 +4223,19 @@ static zt_s32 cfg80211_cancel_remain_on_channel_cb(struct wiphy *wiphy,
+         zt_u64 cookie)
+ {
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0))
+-    struct net_device *ndev = wdev->netdev;
++    struct net_device *ndev = wdev ? wdev->netdev : NULL;
+ #endif
+ 
+     p2p_info_st *p2p_info   = NULL;
+     ndev_priv_st *pndev_priv = NULL;
+     nic_info_st *pnic_info   = NULL;
++    if (!ndev)
++        return -EINVAL;
+     pndev_priv = netdev_priv(ndev);
+ 
+     pnic_info = pndev_priv->nic;
++    if (!pnic_info || !pnic_info->p2p)
++        return -EINVAL;
+     p2p_info = pnic_info->p2p;
+     CFG80211_DBG("mac addr: "ZT_MAC_FMT, ZT_MAC_ARG(nic_to_local_addr(pnic_info)));
+     if (ndev == NULL)
+diff --git a/ZT9101_android_V1.2.1800.20241115/os/linux/hif/usb.c b/ZT9101_android_V1.2.1800.20241115/os/linux/hif/usb.c
+index 9246173..4426b25 100644
+--- a/ZT9101_android_V1.2.1800.20241115/os/linux/hif/usb.c
++++ b/ZT9101_android_V1.2.1800.20241115/os/linux/hif/usb.c
+@@ -79,7 +79,6 @@ zt_s32 zt_endpoint_init(struct usb_interface *pusb_intf,
+                         hif_usb_mngt *pusb_mngt)
+ {
+     zt_s32 status                                      = 0;
+-    struct usb_host_config *phost_cfg               = NULL;
+     struct usb_config_descriptor *pcfg_desc         = NULL;
+     struct usb_host_interface *phost_itface         = NULL;
+     struct usb_interface_descriptor *pitface_desc   = NULL;
+@@ -95,16 +94,42 @@ zt_s32 zt_endpoint_init(struct usb_interface *pusb_intf,
+     pusb_mngt->n_out_pipes = 0;
+     pusb_dev = pusb_mngt->pusb_dev;
+ 
+-    phost_cfg = pusb_dev->actconfig;
+-    pcfg_desc = &phost_cfg->desc;
++    /*
++     * Read the USB configuration through the kernel USB API. On vendor
++     * kernels, the trailing usb_device layout depends on build options.
++     * Direct actconfig access caused a NULL+4 Oops on ArkOS 4.4.189.
++     * This adapter has one USB configuration (descriptor index 0).
++     */
++    pcfg_desc = kzalloc(sizeof(*pcfg_desc), GFP_KERNEL);
++    if (!pcfg_desc)
++        return -ENOMEM;
++    status = usb_get_descriptor(pusb_dev, USB_DT_CONFIG, 0,
++                                pcfg_desc, sizeof(*pcfg_desc));
++    if (status < sizeof(*pcfg_desc) ||
++        pcfg_desc->bDescriptorType != USB_DT_CONFIG ||
++        pcfg_desc->bNumInterfaces == 0)
++    {
++        USB_WARN("R36S: invalid USB config descriptor, ret=%d", status);
++        kfree(pcfg_desc);
++        return -ENODEV;
++    }
++    pusb_mngt->n_interfaces = pcfg_desc->bNumInterfaces;
++    USB_DBG("R36S: USB config=%u interfaces=%u",
++            pcfg_desc->bConfigurationValue, pcfg_desc->bNumInterfaces);
++    kfree(pcfg_desc);
++    pcfg_desc = NULL;
++    if (!pusb_intf->altsetting || pusb_intf->num_altsetting < 1)
++        return -ENODEV;
+ 
+     phost_itface = &pusb_intf->altsetting[0];
+     pitface_desc = &phost_itface->desc;
+ 
+-    pusb_mngt->n_interfaces = pcfg_desc->bNumInterfaces;
+     pusb_mngt->intface_num = pitface_desc->bInterfaceNumber;
+     pusb_mngt->n_endpoints = pitface_desc->bNumEndpoints;
+ 
++    if (pusb_mngt->n_endpoints && !phost_itface->endpoint)
++        return -ENODEV;
++
+     for (i = 0; i < pusb_mngt->n_endpoints; i++)
+     {
+         phost_endpt = &phost_itface->endpoint[i];
+@@ -114,17 +139,23 @@ zt_s32 zt_endpoint_init(struct usb_interface *pusb_intf,
+ 
+             if (endpoint_is_bulk_in(pendpt_desc))
+             {
++                if (pusb_mngt->n_in_pipes >= ARRAY_SIZE(pusb_mngt->in_endp_addr) ||
++                    pusb_mngt->n_in_pipes >= ARRAY_SIZE(pusb_mngt->i_bulk_pipe_sz))
++                    return -EINVAL;
+                 USB_DBG("EP_IN  = num[%d]", endpoint_num(pendpt_desc));
+ 
+                 pusb_mngt->in_endp_addr[pusb_mngt->n_in_pipes] = endpoint_num(pendpt_desc);
+-                pusb_mngt->i_bulk_pipe_sz[pusb_mngt->n_in_pipes] =  pendpt_desc->bLength;
++                pusb_mngt->i_bulk_pipe_sz[pusb_mngt->n_in_pipes] =  le16_to_cpu(pendpt_desc->wMaxPacketSize);
+                 pusb_mngt->n_in_pipes++;
+             }
+             else if (endpoint_is_bulk_out(pendpt_desc))
+             {
++                if (pusb_mngt->n_out_pipes >= ARRAY_SIZE(pusb_mngt->out_endp_addr) ||
++                    pusb_mngt->n_out_pipes >= ARRAY_SIZE(pusb_mngt->o_bulk_pipe_sz))
++                    return -EINVAL;
+                 USB_DBG("EP_OUT = num[%d]", endpoint_num(pendpt_desc));
+                 pusb_mngt->out_endp_addr[pusb_mngt->n_out_pipes] = endpoint_num(pendpt_desc);
+-                pusb_mngt->o_bulk_pipe_sz[pusb_mngt->n_out_pipes] = pendpt_desc->wMaxPacketSize;
++                pusb_mngt->o_bulk_pipe_sz[pusb_mngt->n_out_pipes] = le16_to_cpu(pendpt_desc->wMaxPacketSize);
+                 pusb_mngt->n_out_pipes++;
+             }
+         }
