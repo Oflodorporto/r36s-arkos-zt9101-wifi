@@ -1,0 +1,6 @@
+.build/
+payload/
+__pycache__/
+*.log
+diagnostics/
+release-work/
