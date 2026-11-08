@@ -43,6 +43,34 @@ different `/boot/Image` hash. Do not rename an unrelated adapter or force a
 MediaTek/Realtek driver onto this USB ID. R36S/R36SH case names alone do not
 identify the kernel, screen panel or USB wiring.
 
+## Tested boards and the Wi-Fi Off case
+
+| Test unit | Physical identification | Evidence and limits |
+| --- | --- | --- |
+| Vertical R36S | Visible PCB marking in the owner's photo: **`R36S-V12`**, dated **`2023-08-18`** | Wi-Fi was recovered on this unit. The photographed marking identifies the visible PCB; it does not independently establish the revision of every board inside the handheld. Screen setup used Panel 4. |
+| Horizontal R36SH / R36S-H | Model identified; **exact PCB revision not confirmed from an available legible marking** | R2 installation, module load/unload were checked; Wi-Fi after swapping dongles was confirmed by the owner. The case/model name must not be used as a PCB revision. |
+
+The vertical unit had shown **Wi-Fi Off**, empty network lists and Wi-Fi/menu
+hangs. The owner reported that **the same handheld and Realtek dongle worked
+with the other unit's configured SD card**, while the original card did not.
+This comparison pointed toward the software/boot configuration on the card;
+it did not support declaring this unit permanently incapable of USB Wi-Fi.
+Subsequent network tests confirmed recovery on the vertical unit.
+
+The other tested adapter was **Realtek RTL8188FTV, USB `0bda:f179`**, using
+`rtl8188fu`. **The ZTop R2 installer in this repository is for `350b:9101`;
+it does not install a Realtek driver.** The Realtek is documented here as a
+working comparison/recovery route, not as proof that every adapter with that
+name or every R36S-V12-marked PCB will work with this package.
+
+If a supported-looking Realtek dongle still shows Wi-Fi Off, compare the
+**USB ID, exact kernel Image, matching module, blacklist/configuration and
+active DTB/USB role**, then distinguish USB detection, interface creation,
+association and DHCP. Matching the printed kernel version or the case name
+alone does not establish compatibility. An empty scan alone cannot identify
+a faulty board. These results document the tested units, not universal support
+for all boards or a diagnosis of every Wi-Fi failure.
+
 ## Install the tested package
 
 Download **[r36s-zt9101-r2-install.tar.gz](r36s-zt9101-r2-install.tar.gz)** from this repository, extract it and
