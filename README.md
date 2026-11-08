@@ -48,7 +48,7 @@ identify the kernel, screen panel or USB wiring.
 | Test unit | Physical identification | Evidence and limits |
 | --- | --- | --- |
 | Vertical R36S | Visible PCB marking in the owner's photo: **`R36S-V12`**, dated **`2023-08-18`** | Wi-Fi was recovered on this unit. The photographed marking identifies the visible PCB; it does not independently establish the revision of every board inside the handheld. Screen setup used Panel 4. |
-| Horizontal R36SH / R36S-H | Model identified; **exact PCB revision not confirmed from an available legible marking** | R2 installation, module load/unload were checked; Wi-Fi after swapping dongles was confirmed by the owner. The case/model name must not be used as a PCB revision. |
+| Horizontal R36SH / R36S-H | Visible PCB marking in the owner's photo: **`HL-R36H-V20`**, dated **`2024-05-18`** | R2 installation, module load/unload were checked; Wi-Fi after swapping dongles was confirmed by the owner. The case/model name must not be used as a PCB revision. |
 
 The vertical unit had shown **Wi-Fi Off**, empty network lists and Wi-Fi/menu
 hangs. The owner reported that **the same handheld and Realtek dongle worked
