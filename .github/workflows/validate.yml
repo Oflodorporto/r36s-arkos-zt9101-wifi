@@ -1,0 +1,19 @@
+name: Validate package and tools
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check source and binary archives
+        run: sha256sum -c SHA256SUMS
+      - name: Check shell syntax
+        run: bash -n tools/install.sh tools/rollback.sh tools/build-driver.sh tools/dtb-usb-mode.sh Install-ZTop.sh Diagnose-WiFi.sh
+      - name: Compile Python tools
+        run: python3 -m py_compile tools/diagnose.py tools/check-repository.py
+      - name: Test package checks and source patch
+        run: python3 tools/check-repository.py
